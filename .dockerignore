@@ -1,7 +1,11 @@
 __pycache__/
 *.pyc
 venv/
+env/
 downloads/
+*.mp4
+*.mkv
 .git/
 .github/
-EOF
+.vscode/
+*.log
