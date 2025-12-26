@@ -124,7 +124,7 @@ class Doodozer:
                     )
                 
                 async with aiofiles.open(path, "wb") as f:
-                    chunk_size = 8192
+                    chunk_size = 1024 * 1024  # 1 MB chunks for better throughput
                     async for chunk in response.content.iter_chunked(chunk_size):
                         await f.write(chunk)
                         if progress_bar:
