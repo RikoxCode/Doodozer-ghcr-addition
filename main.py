@@ -7,16 +7,16 @@ from doodoo.core.downloader import Doodozer
 from doodoo.utils.helper import setup_logger
 
 def is_valid_url(url: str) -> bool:
-    """Memvalidasi apakah string merupakan URL yang valid.
+    """Validate whether a string is a valid URL.
 
-    Metode ini memeriksa apakah string yang diberikan mengandung komponen URL yang 
-    valid, seperti scheme dan netloc.
+    This method checks if the given string contains valid URL components, 
+    such as scheme and netloc.
 
     Args:
-        url (str): String URL yang akan divalidasi.
+        url (str): URL string to validate.
 
     Returns:
-        bool: True jika URL valid, False jika tidak valid.
+        bool: True if URL is valid, False if invalid.
     """
     try:
         result = urlparse(url)
@@ -25,36 +25,36 @@ def is_valid_url(url: str) -> bool:
         return False
 
 async def main():
-    """Fungsi utama untuk menjalankan Doodozer CLI.
+    """Main function to run the Doodozer CLI.
 
-    Fungsi ini mengatur argumen command line, memvalidasi URL (satu atau beberapa dengan pemisah koma),
-    menginisialisasi logger, dan memulai proses pengunduhan video dari DoodStream.
+    This function sets up command line arguments, validates URLs (one or more separated by commas),
+    initializes the logger, and starts the video download process from DoodStream.
 
     Returns:
-        None: Fungsi ini tidak mengembalikan nilai.
+        None: This function does not return a value.
 
     Raises:
-        SystemExit: Jika tidak ada URL yang valid atau terjadi kesalahan fatal.
+        SystemExit: If no valid URLs are provided or a fatal error occurs.
 
-    Contoh:
-        Dijalankan dari command line:
+    Example:
+        Run from command line:
         $ python main.py https://d-s.io/e/xxxxxxxxxx
         $ python main.py https://d-s.io/e/xxxxxxxxxx -o video.mp4 -v
         $ python main.py "https://d-s.io/e/xxxxxxxxxx,https://d-s.io/e/yyyyyyyyyy" -o videos/
     """
     parser = argparse.ArgumentParser(
-        description="Doodozer CLI - Alat Pengunduh Video dari DoodStream.",
+        description="Doodozer CLI - Video Downloader Tool for DoodStream.",
         formatter_class=argparse.RawTextHelpFormatter,
-        epilog="Contoh penggunaan:\n"
+        epilog="Usage examples:\n"
                "  python main.py https://d-s.io/e/xxxxxxxxxx\n"
                "  python main.py https://d-s.io/e/xxxxxxxxxx -o my_video.mp4 -v\n"
                "  python main.py \"https://d-s.io/e/xxxxxxxxxx,https://d-s.io/e/yyyyyyyyyy\" -o videos/"
     )
 
-    parser.add_argument("url", metavar="URL", type=str, help="URL video DoodStream yang akan diunduh. Bisa menggunakan beberapa URL dengan pemisah koma (contoh: url1,url2).")
-    parser.add_argument("-o", "--output", dest="output_path", type=str, default=None, help="Nama file atau path untuk menyimpan video. Jika tidak disertakan, nama file akan dibuat otomatis.")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Aktifkan mode verbose untuk output log yang lebih detail.")
-    parser.add_argument("--no-progress", action="store_true", help="Nonaktifkan progress bar saat mengunduh.")
+    parser.add_argument("url", metavar="URL", type=str, help="DoodStream video URL to download. Can use multiple URLs separated by commas (example: url1,url2).")
+    parser.add_argument("-o", "--output", dest="output_path", type=str, default=None, help="Filename or path to save the video. If not provided, filename will be created automatically.")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose mode for more detailed log output.")
+    parser.add_argument("--no-progress", action="store_true", help="Disable progress bar during download.")
 
     args = parser.parse_args()
 
@@ -66,15 +66,15 @@ async def main():
     valid_urls = []
     for url in urls:
         if not is_valid_url(url) or ("/e/" not in url and "/d/" not in url):
-            logging.warning(f"URL tidak valid dan akan diabaikan: {url}")
+            logging.warning(f"Invalid URL and will be ignored: {url}")
         else:
             valid_urls.append(url)
     
     if not valid_urls:
-        logging.error("Tidak ada URL DoodStream yang valid. Pastikan URL berasal dari DoodStream.")
+        logging.error("No valid DoodStream URLs. Make sure URLs are from DoodStream.")
         return
     
-    logging.info(f"Mengunduh {len(valid_urls)} video...")
+    logging.info(f"Downloading {len(valid_urls)} video(s)...")
 
     try:
         if len(valid_urls) > 1 and args.output_path and not args.output_path.endswith("/") and not args.output_path.endswith("\\"):
@@ -82,13 +82,13 @@ async def main():
             output_dir = args.output_path
             if not os.path.isdir(output_dir):
                 os.makedirs(output_dir)
-                logging.info(f"Membuat direktori: {output_dir}")
+                logging.info(f"Creating directory: {output_dir}")
                 args.output_path = output_dir
             else:
                 args.output_path = output_dir
 
         for i, url in enumerate(valid_urls, 1):
-            logging.info(f"Memproses video {i}/{len(valid_urls)}: {url}")
+            logging.info(f"Processing video {i}/{len(valid_urls)}: {url}")
             
             if len(valid_urls) > 1:
                 if args.output_path and os.path.isdir(args.output_path):
@@ -107,13 +107,13 @@ async def main():
             )
             await downloader.download()
             
-            logging.info(f"Selesai mengunduh video {i}/{len(valid_urls)}")
+            logging.info(f"Finished downloading video {i}/{len(valid_urls)}")
             
-        logging.info("Semua video berhasil diunduh!")
+        logging.info("All videos successfully downloaded!")
     except Exception as e:
-        logging.error(f"Terjadi kesalahan yang tidak terduga: {e}")
+        logging.error(f"An unexpected error occurred: {e}")
     except asyncio.CancelledError:
-        logging.info("Program dihentikan oleh asyncio")
+        logging.info("Program stopped by asyncio")
 
 if __name__ == "__main__":
     asyncio.run(main())

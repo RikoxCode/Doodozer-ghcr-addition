@@ -9,30 +9,30 @@ from tqdm.asyncio import tqdm
 from doodoo.api.doodstream import DoodStreamAPI
 
 class Doodozer:
-    """Kelas utama untuk mengorkestrasi proses pengunduhan video dari DoodStream.
+    """Main class for orchestrating the DoodStream video download process.
 
-    Kelas ini menyediakan antarmuka lengkap untuk mengunduh video dari DoodStream,
-    mulai dari mendapatkan URL unduhan hingga menyimpan file dengan progress bar.
+    This class provides a complete interface for downloading videos from DoodStream,
+    from obtaining the download URL to saving the file with a progress bar.
 
     Attributes:
-        url (str): URL video DoodStream yang akan diunduh.
-        output_path (Optional[str]): Path file output. Jika None, nama file akan dibuat otomatis.
-        show_progress (bool): Menampilkan progress bar jika True.
-        logger (logging.Logger): Logger untuk logging aktivitas pengunduhan.
+        url (str): DoodStream video URL to download.
+        output_path (Optional[str]): Output file path. If None, filename will be created automatically.
+        show_progress (bool): Display progress bar if True.
+        logger (logging.Logger): Logger for logging download activities.
     """
 
     def __init__(self, url: str, output_path: Optional[str] = None, show_progress: bool = True):
-        """Menginisialisasi instance Doodozer Downloader.
+        """Initialize the Doodozer Downloader instance.
 
         Args:
-            url (str): URL video DoodStream yang akan diunduh.
-            output_path (Optional[str]): Path file output. Jika None, nama file akan dibuat
-                otomatis berdasarkan judul video. Jika merupakan direktori, file akan disimpan
-                di dalam direktori tersebut dengan nama otomatis.
-            show_progress (bool): Menampilkan progress bar jika True. Defaultnya adalah True.
+            url (str): DoodStream video URL to download.
+            output_path (Optional[str]): Output file path. If None, filename will be created
+                automatically based on video title. If it's a directory, file will be saved
+                inside that directory with an automatic name.
+            show_progress (bool): Display progress bar if True. Default is True.
 
         Raises:
-            ValueError: Jika URL yang diberikan tidak valid atau kosong.
+            ValueError: If the provided URL is invalid or empty.
         """
         self.url = url
         self.output_path = output_path
@@ -40,20 +40,20 @@ class Doodozer:
         self.logger = logging.getLogger(__name__)
     
     async def download(self) -> None:
-        """Memulai seluruh proses pengunduhan video dari DoodStream.
+        """Start the entire DoodStream video download process.
 
-        Metode ini mengorkestrasi seluruh proses pengunduhan, mulai dari:
-        1. Mengambil informasi video (URL unduhan langsung dan judul)
-        2. Menentukan path output file
-        3. Mengunduh file dengan progress bar (jika diaktifkan)
-        4. Menyimpan file ke lokasi yang ditentukan
+        This method orchestrates the entire download process, including:
+        1. Retrieving video information (direct download URL and title)
+        2. Determining the output file path
+        3. Downloading the file with progress bar (if enabled)
+        4. Saving the file to the specified location
 
         Returns:
-            None: Metode ini bersifat asinkron dan tidak mengembalikan nilai.
+            None: This method is asynchronous and does not return a value.
 
         Raises:
-            aiohttp.ClientError: Jika terjadi kesalahan jaringan saat mengakses DoodStream.
-            Exception: Kesalahan lainnya yang mungkin terjadi selama proses pengunduhan.
+            aiohttp.ClientError: If a network error occurs while accessing DoodStream.
+            Exception: Other errors that may occur during the download process.
         """
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
@@ -63,7 +63,7 @@ class Doodozer:
 
             result = await api.get_download_url(self.url)
             if not result:
-                self.logger.error("Gagal mendapatkan informasi video. Proses dihentikan.")
+                self.logger.error("Failed to retrieve video information. Process stopped.")
                 return
             
             direct_url, title = result
@@ -78,40 +78,40 @@ class Doodozer:
                 filename = f"{title}.mp4"
                 final_path = filename
             
-            self.logger.info(f"Video akan disimpan di: {os.path.abspath(final_path)}")
+            self.logger.info(f"Video will be saved to: {os.path.abspath(final_path)}")
 
             await self._download_file(session, direct_url, final_path)
 
     async def _download_file(self, session: aiohttp.ClientSession, url: str, path: str) -> None:
-        """Mengunduh file dari URL dan menyimpannya ke path yang diberikan dengan progress bar.
+        """Download file from URL and save it to the given path with progress bar.
 
-        Metode ini mengunduh file asinkron menggunakan HTTP streaming dan menampilkan
-        progress bar jika show_progress diaktifkan. File akan diunduh dalam chunk
-        untuk mengurangi penggunaan memori.
+        This method downloads the file asynchronously using HTTP streaming and displays
+        a progress bar if show_progress is enabled. Files are downloaded in chunks
+        to reduce memory usage.
 
         Args:
-            session (aiohttp.ClientSession): Session HTTP untuk melakukan request.
-            url (str): URL file yang akan diunduh.
-            path (str): Path lengkap di mana file akan disimpan.
+            session (aiohttp.ClientSession): HTTP session for making requests.
+            url (str): URL of the file to download.
+            path (str): Full path where the file will be saved.
 
         Returns:
-            None: Metode ini bersifat asinkron dan tidak mengembalikan nilai.
+            None: This method is asynchronous and does not return a value.
 
         Raises:
-            aiohttp.ClientError: Jika terjadi kesalahan jaringan saat mengunduh.
-            OSError: Jika terjadi kesalahan saat menulis file ke disk.
-            Exception: Kesalahan lainnya yang mungkin terjadi selama proses pengunduhan.
+            aiohttp.ClientError: If a network error occurs during download.
+            OSError: If an error occurs while writing the file to disk.
+            Exception: Other errors that may occur during the download process.
 
         Note:
-            Jika terjadi kesalahan selama pengunduhan, file yang sudah diunduh
-            akan dihapus untuk mencegah file corrupt tersisa di disk.
+            If an error occurs during download, the partially downloaded file
+            will be deleted to prevent corrupt files from remaining on disk.
         """
         try:
             async with session.get(url, timeout=None) as response:
                 response.raise_for_status()
                 total_size = int(response.headers.get("Content-Length", 0))
 
-                self.logger.info("Memulai proses pengunduhan...")
+                self.logger.info("Starting download process...")
 
                 progress_bar = None
                 if self.show_progress:
@@ -133,12 +133,12 @@ class Doodozer:
                 if progress_bar:
                     progress_bar.close()
 
-                self.logger.info(f"\nUnduhan selesai! Video berhasil disimpan.")
+                self.logger.info(f"\nDownload complete! Video successfully saved.")
         except aiohttp.ClientError as e:
-            self.logger.error(f"Gagal mengunduh file: {e}")
+            self.logger.error(f"Failed to download file: {e}")
             if os.path.exists(path):
                 os.remove(path)
         except Exception as e:
-            self.logger.error(f"Terjadi kesalahan saat menyimpan file: {e}")
+            self.logger.error(f"Error occurred while saving file: {e}")
             if os.path.exists(path):
                 os.remove(path)

@@ -2,22 +2,22 @@ import logging
 import sys
 
 def setup_logger(level=logging.INFO):
-    """Mengkonfigurasi logger untuk output ke console.
+    """Configure logger for console output.
 
-    Fungsi ini mengatur logger dengan format yang mudah dibaca dan mengirimkan output
-    ke konsol. Logger akan dikonfigurasi dengan level logging yang dapat disesuaikan.
+    This function sets up the logger with an easy-to-read format and sends output
+    to the console. The logger will be configured with a customizable logging level.
 
     Args:
-        level (int, optional): Level logging yang digunakan. 
-                              Defaultnya adalah logging.INFO.
+        level (int, optional): Logging level to use. 
+                              Default is logging.INFO.
 
     Returns:
-        None: Fungsi ini tidak mengembalikan nilai, hanya mengatur konfigurasi logger.
+        None: This function does not return a value, only sets up logger configuration.
 
-    Contoh:
+    Example:
         >>> setup_logger(logging.DEBUG)
-        >>> logging.debug("Pesan debug")
-        >>> logging.info("Pesan informasi")
+        >>> logging.debug("Debug message")
+        >>> logging.info("Info message")
     """
     log_format = logging.Formatter(
         "%(asctime)s [%(levelname)s] - %(message)s",

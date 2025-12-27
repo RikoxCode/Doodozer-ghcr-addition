@@ -9,55 +9,55 @@ import aiohttp
 from bs4 import BeautifulSoup
 
 class DoodStreamAPI:
-    """Kelas untuk berinteraksi dengan DoodStream API.
+    """Class for interacting with DoodStream API.
 
-    Kelas ini menyediakan metode untuk mengakses dan memproses video dari platform
-    DoodStream, termasuk mendapatkan URL unduhan langsung dan judul video.
+    This class provides methods to access and process videos from the
+    DoodStream platform, including obtaining direct download URLs and video titles.
 
     Attributes:
-        session (aiohttp.ClientSession): Session HTTP untuk melakukan request.
-        logger (logging.Logger): Logger untuk logging aktivitas kelas.
+        session (aiohttp.ClientSession): HTTP session for making requests.
+        logger (logging.Logger): Logger for logging class activities.
     """
 
     def __init__(self, session: aiohttp.ClientSession):
-        """Menginisialisasi instance DoodStreamAPI.
+        """Initialize DoodStreamAPI instance.
 
         Args:
-            session (aiohttp.ClientSession): Session HTTP yang digunakan untuk melakukan
-                request ke DoodStream API.
+            session (aiohttp.ClientSession): HTTP session used to make
+                requests to DoodStream API.
 
         Raises:
-            ValueError: Jika session yang diberikan bukan instance aiohttp.ClientSession.
+            ValueError: If the provided session is not an instance of aiohttp.ClientSession.
         """
         self.session = session
         self.logger = logging.getLogger(__name__)
     
     async def get_download_url(self, url: str) -> Optional[Tuple[str, str]]:
-        """Mendapatkan direct download URL dan judul video dari halaman DoodStream.
+        """Get direct download URL and video title from DoodStream page.
 
-        Metode ini memproses halaman embed DoodStream untuk mengekstrak URL unduhan
-        langsung dan judul video yang dapat digunakan untuk mengunduh video.
+        This method processes the DoodStream embed page to extract the direct
+        download URL and video title that can be used to download the video.
 
         Args:
-            url (str): URL video DoodStream (contoh: https://dood.la/e/xxxxxxxx).
-                       URL harus dalam format embed yang valid.
+            url (str): DoodStream video URL (example: https://dood.la/e/xxxxxxxx).
+                       URL must be in valid embed format.
 
         Returns:
-            Optional[Tuple[str, str]]: Tuple berisi (direct_download_url, title) jika berhasil,
-                                     atau None jika gagal memproses URL.
+            Optional[Tuple[str, str]]: Tuple containing (direct_download_url, title) if successful,
+                                     or None if URL processing fails.
 
         Raises:
-            aiohttp.ClientError: Jika terjadi kesalahan saat melakukan request HTTP.
-            Exception: Kesalahan umum lainnya yang terjadi saat memproses halaman.
+            aiohttp.ClientError: If an error occurs while making HTTP request.
+            Exception: Other general errors that occur while processing the page.
 
-        Contoh:
+        Example:
             >>> api = DoodStreamAPI(session)
             >>> download_url, title = await api.get_download_url("https://dood.la/e/xxxxxxxx")
             >>> if download_url:
-            ...     print(f"Judul: {title}")
-            ...     print(f"URL unduhan: {download_url}")
+            ...     print(f"Title: {title}")
+            ...     print(f"Download URL: {download_url}")
         """
-        self.logger.info(f"Memproses URL: {url}")
+        self.logger.info(f"Processing URL: {url}")
 
         embed_url = url.replace('/d/', '/e/')
 
@@ -70,13 +70,13 @@ class DoodStreamAPI:
             
             pass_md5_match = re.search(r'/pass_md5/([^"\']+)', html_content)
             if not pass_md5_match:
-                self.logger.error("Tidak dapat menemukan 'pass_md5' pada halaman embed.")
+                self.logger.error("Cannot find 'pass_md5' on embed page.")
                 return None
             
             pass_md5_path = pass_md5_match.group(1)
             domain = urlparse(embed_url).netloc
             pass_md5_url = f"https://{domain}/pass_md5/{pass_md5_path}"
-            self.logger.debug(f"URL pass_md5 ditemukan: {pass_md5_url}")
+            self.logger.debug(f"pass_md5 URL found: {pass_md5_url}")
 
             async with self.session.get(pass_md5_url) as md5_response:
                 md5_response.raise_for_status()
@@ -93,11 +93,11 @@ class DoodStreamAPI:
 
             title = re.sub(r'[\\/*?:"<>|]', "", title)
 
-            self.logger.info(f"Direct download link berhasil dibuat untuk '{title}'")
+            self.logger.info(f"Direct download link successfully created for '{title}'")
             return final_url, title
         except aiohttp.ClientError as e:
-            self.logger.error(f"Request error saat mengakses DoodStream: {e}")
+            self.logger.error(f"Request error while accessing DoodStream: {e}")
         except Exception as e:
-            self.logger.error(f"Terjadi kesalahan saat memproses URL DoodStream: {e}", exc_info=True)
+            self.logger.error(f"Error occurred while processing DoodStream URL: {e}", exc_info=True)
 
         return None
